@@ -122,11 +122,11 @@ export function Slider({
         className={`relative w-full overflow-hidden rounded-full bg-white/15 ${heightClass}`}
       >
         <div
-          className={`absolute left-0 top-0 h-full rounded-full bg-white transition-[width] duration-75 group-hover/slider:bg-accent ${heightClass}`}
+          className={`absolute left-0 top-0 h-full rounded-full bg-accent transition-[width] duration-75 ${heightClass}`}
           style={{ width: `${percentage}%` }}
         />
         <div
-          className={`absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-sm transition-opacity duration-150 group-hover/slider:opacity-100 ${
+          className={`absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-accent opacity-0 shadow-sm transition-all duration-150 group-hover/slider:opacity-100 group-hover/slider:scale-110 ${
             size === "sm" ? "h-3 w-3" : size === "lg" ? "h-4 w-4" : "h-3.5 w-3.5"
           }`}
           style={{ left: `calc(${percentage}% - ${size === "sm" ? 6 : size === "lg" ? 8 : 7}px)` }}

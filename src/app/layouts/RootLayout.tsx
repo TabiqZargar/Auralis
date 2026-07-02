@@ -1,23 +1,57 @@
-import { Outlet } from "react-router";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Outlet, useLocation } from "react-router";
+import { motion, AnimatePresence } from "framer-motion";
 import { PlayerLayout } from "@/components/layout/PlayerLayout";
+import { NowPlayingOverlay } from "@/components/layout/NowPlayingOverlay";
+import { QueuePanel } from "@/components/layout/QueuePanel";
 import { ContextMenu } from "@/components/shared/ContextMenu";
 import { ToastContainer } from "@/components/shared/ToastContainer";
+import { DynamicBackground } from "@/components/shared/DynamicBackground";
 import { MOCK_TRACKS } from "@/features/player/constants/mockTracks";
-import { useEffect, useRef, useCallback } from "react";
-import { useQueueStore, usePlayerStore, useLibraryStore, useSettingsStore } from "@/store";
+import {
+  useQueueStore,
+  usePlayerStore,
+  useLibraryStore,
+  useSettingsStore,
+} from "@/store";
 import { useContextMenuStore } from "@/store/contextMenuStore";
 import { useToastStore } from "@/store/toastStore";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useDynamicTheme } from "@/hooks/useDynamicTheme";
+import { audioEngine } from "@/lib/audio";
 import { audioPlayerService } from "@/services/audio";
+
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -12 },
+};
 
 export function RootLayout() {
   const hasInitialized = useRef(false);
+  const location = useLocation();
   const cm = useContextMenuStore();
   const addToast = useToastStore((s) => s.addToast);
+
+  const [nowPlayingOpen, setNowPlayingOpen] = useState(false);
+  const [queueOpen, setQueueOpen] = useState(false);
+
+  useDynamicTheme();
 
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
+
+    audioEngine.initialize();
+
+    const audioEl = audioPlayerService.getElement();
+    if (audioEl) {
+      try {
+        audioEngine.connectAudioElement(audioEl);
+      } catch {
+        /* element may not be ready */
+      }
+    }
 
     const q = useQueueStore.getState();
     const p = usePlayerStore.getState();
@@ -39,9 +73,11 @@ export function RootLayout() {
       p.pause();
     } else {
       audioPlayerService.play().then(
-        () => p.play(),
-        (err) =>
-          p.setError(err?.message ?? "Playback failed"),
+        () => {
+          p.play();
+          audioEngine.resume();
+        },
+        (err) => p.setError(err?.message ?? "Playback failed"),
       );
     }
   }, []);
@@ -60,6 +96,7 @@ export function RootLayout() {
       audioPlayerService.play().then(
         () => {
           p.play();
+          audioEngine.resume();
           useLibraryStore.getState().addRecentlyPlayed(nextTrack);
         },
         (err) => p.setError(err?.message ?? "Playback failed"),
@@ -108,8 +145,8 @@ export function RootLayout() {
   }, []);
 
   const handleToggleQueue = useCallback(() => {
-    addToast("Queue panel toggle (coming soon)", "info", 1500);
-  }, [addToast]);
+    setQueueOpen((prev) => !prev);
+  }, []);
 
   const handleToggleLyrics = useCallback(() => {
     useSettingsStore.getState().toggleLyrics();
@@ -135,7 +172,7 @@ export function RootLayout() {
 
   const handleShowHelp = useCallback(() => {
     addToast(
-      "Shortcuts: Space=Play/Pause, ←/→=Seek, Ctrl+←/→=Prev/Next, M=Mute, F=Like, ?=Help",
+      "Shortcuts: Space=Play/Pause, \u2190/\u2192=Seek, Ctrl+\u2190/\u2192=Prev/Next, M=Mute, F=Like, Q=Queue, ?=Help",
       "info",
       5000,
     );
@@ -156,23 +193,50 @@ export function RootLayout() {
 
   return (
     <div className="flex h-screen flex-col bg-black text-white">
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-[--sidebar-width] shrink-0 border-r border-white/5 bg-surface md:block">
-          {/* Sidebar */}
+      <DynamicBackground />
+
+      <div className="relative z-10 flex flex-1 overflow-hidden">
+        {/* Sidebar placeholder */}
+        <aside className="hidden w-[--sidebar-width] shrink-0 border-r border-white/5 bg-surface/80 backdrop-blur-xl md:block">
+          {/* Sidebar - to be implemented */}
         </aside>
+
+        {/* Main content with page transitions */}
         <main className="relative flex flex-1 flex-col overflow-y-auto">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
-        <aside className="hidden w-[--right-panel-width] shrink-0 border-l border-white/5 bg-surface xl:block">
-          {/* Right Panel */}
-        </aside>
+
+        {/* Right Panel / Queue */}
+        <AnimatePresence>
+          {queueOpen && (
+            <QueuePanel isOpen={true} onClose={() => setQueueOpen(false)} />
+          )}
+        </AnimatePresence>
       </div>
-      <footer className="h-[--player-height] shrink-0 border-t border-white/5 bg-surface-elevated">
-        <PlayerLayout />
+
+      {/* Player Bar */}
+      <footer className="relative z-10 h-[--player-height] shrink-0 border-t border-white/5 bg-surface-elevated/95 backdrop-blur-xl">
+        <PlayerLayout onExpand={() => setNowPlayingOpen(true)} />
       </footer>
 
-      <ToastContainer />
+      {/* Now Playing Overlay */}
+      <NowPlayingOverlay
+        isOpen={nowPlayingOpen}
+        onClose={() => setNowPlayingOpen(false)}
+      />
 
+      {/* Context Menu */}
       {cm.show && (
         <ContextMenu
           items={cm.items}
@@ -180,6 +244,9 @@ export function RootLayout() {
           onClose={cm.close}
         />
       )}
+
+      {/* Toasts */}
+      <ToastContainer />
     </div>
   );
 }

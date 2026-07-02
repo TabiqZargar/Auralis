@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { motion } from "framer-motion";
 import { ROUTE_BUILDERS } from "@/constants";
 import { MediaImage } from "./MediaImage";
 import { useContextMenuStore } from "@/store/contextMenuStore";
@@ -36,7 +37,7 @@ export function PlaylistCard({ playlist, size = "md", onClick }: PlaylistCardPro
     const open = useContextMenuStore.getState().open;
     const isUserPlaylist = playlist.owner === "user";
 
-    const items = [
+    const items: Parameters<typeof open>[2] = [
       {
         label: "Play Playlist",
         icon: <Play size={14} />,
@@ -60,7 +61,7 @@ export function PlaylistCard({ playlist, size = "md", onClick }: PlaylistCardPro
       },
       ...(isUserPlaylist
         ? [
-            { divider: true } as const,
+            { divider: true, label: "", onClick: undefined } as const,
             {
               label: "Rename",
               icon: <Pencil size={14} />,
@@ -104,9 +105,12 @@ export function PlaylistCard({ playlist, size = "md", onClick }: PlaylistCardPro
   };
 
   return (
-    <button
+    <motion.button
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="group/card flex w-full flex-col items-start gap-2 rounded-md bg-transparent p-3 text-left transition-colors hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className={`${card}`}>
@@ -123,6 +127,6 @@ export function PlaylistCard({ playlist, size = "md", onClick }: PlaylistCardPro
           {playlist.description || `${playlist.totalTracks} tracks`}
         </p>
       </div>
-    </button>
+    </motion.button>
   );
 }

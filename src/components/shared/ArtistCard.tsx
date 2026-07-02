@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { motion } from "framer-motion";
 import { ROUTE_BUILDERS } from "@/constants";
 import { MediaImage } from "./MediaImage";
 import { useContextMenuStore } from "@/store/contextMenuStore";
@@ -77,9 +78,12 @@ export function ArtistCard({ artist, size = "md", onClick }: ArtistCardProps) {
   };
 
   return (
-    <button
+    <motion.button
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="group/card flex w-full flex-col items-center gap-3 rounded-md bg-transparent p-4 text-center transition-colors hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className={`${container}`}>
@@ -96,6 +100,6 @@ export function ArtistCard({ artist, size = "md", onClick }: ArtistCardProps) {
           <p className="truncate text-xs text-text-subdued">{artist.genres[0]}</p>
         )}
       </div>
-    </button>
+    </motion.button>
   );
 }

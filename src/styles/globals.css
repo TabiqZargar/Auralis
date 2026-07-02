@@ -5,7 +5,7 @@
   --color-surface-elevated: oklch(0.17 0.028 261.84);
   --color-surface-highlight: oklch(0.21 0.028 261.84);
   --color-subdued: oklch(0.68 0.028 261.84);
-  --color-accent: #1db954;
+  --color-accent: var(--dynamic-accent, #1db954);
   --color-accent-hover: #1ed760;
   --color-text-base: #ffffff;
   --color-text-subdued: #a7a7a7;
@@ -20,6 +20,11 @@
   --player-height: 90px;
   --header-height: 64px;
   --right-panel-width: 360px;
+
+  --dynamic-accent: #1db954;
+  --dynamic-bg-from: #0f0f0f;
+  --dynamic-bg-to: #050505;
+  --dynamic-glow: rgba(29, 185, 84, 0.15);
 }
 
 *,
@@ -83,4 +88,29 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-in {
+  animation: slide-in-right 0.25s ease-out;
 }

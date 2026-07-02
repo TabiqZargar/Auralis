@@ -8,3 +8,4 @@ export { useFavorites } from "./useFavorites";
 export { usePlaylists } from "./usePlaylists";
 export { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 export { useMediaSession } from "./useMediaSession";
+export { useDynamicTheme } from "./useDynamicTheme";

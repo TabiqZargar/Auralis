@@ -5,9 +5,14 @@ import { ProgressBar } from "@/components/shared/ProgressBar";
 import { VolumeControl } from "@/components/shared/VolumeControl";
 import { MediaImage } from "@/components/shared/MediaImage";
 import { LikeButton } from "@/components/shared/LikeButton";
+import { Equalizer } from "@/components/shared/Equalizer";
 import { formatArtists } from "@/utils";
 
-export function PlayerLayout() {
+interface PlayerLayoutProps {
+  onExpand?: () => void;
+}
+
+export function PlayerLayout({ onExpand }: PlayerLayoutProps) {
   const player = usePlayer();
   const queue = useQueue();
   const { isLiked, toggleLike } = useFavorites();
@@ -16,21 +21,33 @@ export function PlayerLayout() {
     <div className="flex h-full items-center justify-between px-4">
       {/* Left: Track Info */}
       <div className="flex w-[30%] min-w-0 items-center gap-3">
-        <MediaImage
-          src={player.currentTrack?.coverUrl}
-          alt={player.currentTrack?.title ?? "No track"}
-          size="sm"
-          className="shrink-0"
-        />
+        <button
+          onClick={onExpand}
+          className="shrink-0 rounded transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          aria-label="Open now playing view"
+        >
+          <MediaImage
+            src={player.currentTrack?.coverUrl}
+            alt={player.currentTrack?.title ?? "No track"}
+            size="sm"
+            className="shrink-0"
+          />
+        </button>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-white">
-            {player.currentTrack?.title ?? "No track selected"}
-          </p>
-          <p className="truncate text-xs text-text-subdued">
-            {player.currentTrack
-              ? formatArtists(player.currentTrack.artists)
-              : "Select a track to play"}
-          </p>
+          <button
+            onClick={onExpand}
+            className="block w-full text-left focus:outline-none"
+            aria-label="Open now playing view"
+          >
+            <p className="truncate text-sm font-medium text-white hover:underline">
+              {player.currentTrack?.title ?? "No track selected"}
+            </p>
+            <p className="truncate text-xs text-text-subdued">
+              {player.currentTrack
+                ? formatArtists(player.currentTrack.artists)
+                : "Select a track to play"}
+            </p>
+          </button>
         </div>
         {player.currentTrack && (
           <LikeButton
@@ -39,6 +56,9 @@ export function PlayerLayout() {
             size="sm"
           />
         )}
+        <div className="hidden sm:block">
+          <Equalizer barCount={6} />
+        </div>
       </div>
 
       {/* Center: Controls + Progress */}

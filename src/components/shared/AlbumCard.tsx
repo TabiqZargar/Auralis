@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { motion } from "framer-motion";
 import { ROUTE_BUILDERS } from "@/constants";
 import { MediaImage } from "./MediaImage";
 import { useContextMenuStore } from "@/store/contextMenuStore";
@@ -65,9 +66,12 @@ export function AlbumCard({ album, size = "md", onClick }: AlbumCardProps) {
   };
 
   return (
-    <button
+    <motion.button
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="group/card flex w-full flex-col items-start gap-2 rounded-md bg-transparent p-3 text-left transition-colors hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className={`${card}`}>
@@ -84,6 +88,6 @@ export function AlbumCard({ album, size = "md", onClick }: AlbumCardProps) {
           {album.artists.map((a) => a.name).join(", ")}
         </p>
       </div>
-    </button>
+    </motion.button>
   );
 }
