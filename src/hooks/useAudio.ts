@@ -1,50 +1,64 @@
 import { useCallback, useEffect, useRef } from "react";
 import { audioPlayerService } from "@/services/audio";
-import { usePlayerStore } from "@/store";
 
 export function useAudio() {
-  const playerRef = useRef(audioPlayerService);
-  const { volume, muted, currentSong, status } = usePlayerStore();
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    playerRef.current.initialize();
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    audioPlayerService.initialize();
     return () => {
-      playerRef.current.destroy();
+      audioPlayerService.destroy();
+      initializedRef.current = false;
     };
   }, []);
 
-  useEffect(() => {
-    playerRef.current.setVolume(muted ? 0 : volume);
-  }, [volume, muted]);
-
   const load = useCallback((src: string) => {
-    playerRef.current.load(src);
+    audioPlayerService.load(src);
   }, []);
 
   const play = useCallback(() => {
-    return playerRef.current.play();
+    return audioPlayerService.play();
   }, []);
 
   const pause = useCallback(() => {
-    playerRef.current.pause();
+    audioPlayerService.pause();
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    return audioPlayerService.togglePlay();
   }, []);
 
   const seek = useCallback((time: number) => {
-    playerRef.current.seek(time);
+    audioPlayerService.seek(time);
+  }, []);
+
+  const setVolume = useCallback((value: number) => {
+    audioPlayerService.setVolume(value);
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    audioPlayerService.toggleMute();
   }, []);
 
   const setPlaybackRate = useCallback((rate: number) => {
-    playerRef.current.setPlaybackRate(rate);
+    audioPlayerService.setPlaybackRate(rate);
+  }, []);
+
+  const stop = useCallback(() => {
+    audioPlayerService.stop();
   }, []);
 
   return {
     load,
     play,
     pause,
+    togglePlay,
     seek,
+    setVolume,
+    toggleMute,
     setPlaybackRate,
-    element: playerRef.current.getElement(),
-    isPlaying: status === "playing",
-    currentSong,
+    stop,
   };
 }

@@ -2,27 +2,29 @@ import type { Song, QueueItem, Playlist } from "./models";
 
 export type PlaybackStatus = "idle" | "playing" | "paused" | "loading" | "error";
 
-export type RepeatMode = "off" | "all" | "one";
+export type RepeatMode = "off" | "one" | "all";
 
 export type ShuffleMode = "off" | "on";
 
 export interface PlayerState {
-  currentSong: Song | null;
-  status: PlaybackStatus;
-  currentTime: number;
+  currentTrack: Song | null;
+  isPlaying: boolean;
   duration: number;
+  currentTime: number;
   volume: number;
   muted: boolean;
-  repeat: RepeatMode;
-  shuffle: ShuffleMode;
-  crossfadeEnabled: boolean;
-  crossfadeDuration: number;
+  playbackRate: number;
+  loading: boolean;
+  error: string | null;
 }
 
 export interface QueueState {
-  items: QueueItem[];
+  queue: QueueItem[];
   currentIndex: number;
-  history: QueueItem[];
+  repeatMode: RepeatMode;
+  shuffle: boolean;
+  originalOrder: number[];
+  shuffledOrder: number[];
 }
 
 export interface LibraryState {

@@ -1,5 +1,7 @@
 export { usePlayerStore } from "./playerStore";
-export { useQueueStore } from "./queueStore";
+export type { PlayerState, PlayerActions } from "./playerStore";
+export { useQueueStore, useQueueActions } from "./queueStore";
+export type { QueueState, QueueActions } from "./queueStore";
 export { useLibraryStore } from "./libraryStore";
 export { useThemeStore } from "./themeStore";
 export { useSettingsStore } from "./settingsStore";
