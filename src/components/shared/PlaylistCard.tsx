@@ -1,6 +1,10 @@
 import { useNavigate } from "react-router";
 import { ROUTE_BUILDERS } from "@/constants";
 import { MediaImage } from "./MediaImage";
+import { useContextMenuStore } from "@/store/contextMenuStore";
+import { useQueueStore, usePlayerStore, useLibraryStore } from "@/store";
+import { useToastStore } from "@/store/toastStore";
+import { Play, ListPlus, Trash2, Copy, Pencil, Disc3 } from "lucide-react";
 import type { Playlist } from "@/types";
 
 interface PlaylistCardProps {
@@ -27,9 +31,82 @@ export function PlaylistCard({ playlist, size = "md", onClick }: PlaylistCardPro
     }
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const open = useContextMenuStore.getState().open;
+    const isUserPlaylist = playlist.owner === "user";
+
+    const items = [
+      {
+        label: "Play Playlist",
+        icon: <Play size={14} />,
+        onClick: () => {
+          if (playlist.songs.length > 0) {
+            const q = useQueueStore.getState();
+            const p = usePlayerStore.getState();
+            q.setQueue(playlist.songs, 0);
+            p.loadTrack(playlist.songs[0]!);
+          }
+        },
+      },
+      {
+        label: "Add to Queue",
+        icon: <ListPlus size={14} />,
+        onClick: () => {
+          const q = useQueueStore.getState();
+          playlist.songs.forEach((song) => q.addTrack(song));
+          useToastStore.getState().addToast("Playlist added to queue", "success", 2000);
+        },
+      },
+      ...(isUserPlaylist
+        ? [
+            { divider: true } as const,
+            {
+              label: "Rename",
+              icon: <Pencil size={14} />,
+              onClick: () => {
+                const name = window.prompt("New playlist name:", playlist.title);
+                if (name?.trim()) {
+                  useLibraryStore.getState().updatePlaylist(playlist.id, {
+                    title: name.trim(),
+                    updatedAt: new Date().toISOString(),
+                  });
+                  useToastStore.getState().addToast(`Renamed to "${name.trim()}"`, "success", 2000);
+                }
+              },
+            },
+            {
+              label: "Duplicate",
+              icon: <Copy size={14} />,
+              onClick: () => {
+                useLibraryStore.getState().duplicatePlaylist(playlist.id);
+              },
+            },
+            {
+              label: "Delete",
+              icon: <Trash2 size={14} />,
+              danger: true,
+              onClick: () => {
+                useLibraryStore.getState().removePlaylist(playlist.id);
+                useToastStore.getState().addToast("Playlist deleted", "info", 2000);
+              },
+            },
+          ]
+        : []),
+      {
+        label: "Go to Playlist",
+        icon: <Disc3 size={14} />,
+        onClick: () => navigate(ROUTE_BUILDERS.playlist(playlist.id)),
+      },
+    ];
+
+    open(e.clientX, e.clientY, items);
+  };
+
   return (
     <button
       onClick={handleClick}
+      onContextMenu={handleContextMenu}
       className="group/card flex w-full flex-col items-start gap-2 rounded-md bg-transparent p-3 text-left transition-colors hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className={`${card}`}>

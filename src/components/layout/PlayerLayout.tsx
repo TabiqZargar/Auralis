@@ -1,4 +1,5 @@
-import { usePlayer } from "@/hooks";
+import { usePlayer, useQueue } from "@/hooks";
+import { useFavorites } from "@/hooks/useFavorites";
 import { PlayerControls } from "@/components/shared/PlayerControls";
 import { ProgressBar } from "@/components/shared/ProgressBar";
 import { VolumeControl } from "@/components/shared/VolumeControl";
@@ -7,76 +8,65 @@ import { LikeButton } from "@/components/shared/LikeButton";
 import { formatArtists } from "@/utils";
 
 export function PlayerLayout() {
-  const {
-    currentTrack,
-    isPlaying,
-    duration,
-    currentTime,
-    volume,
-    muted,
-    loading,
-    error,
-    shuffle,
-    repeatMode,
-    togglePlay,
-    nextTrack,
-    previousTrack,
-    seek,
-    setVolume,
-    toggleMute,
-    toggleShuffle: onToggleShuffle,
-    cycleRepeatMode: onCycleRepeat,
-  } = usePlayer();
+  const player = usePlayer();
+  const queue = useQueue();
+  const { isLiked, toggleLike } = useFavorites();
 
   return (
     <div className="flex h-full items-center justify-between px-4">
       {/* Left: Track Info */}
       <div className="flex w-[30%] min-w-0 items-center gap-3">
         <MediaImage
-          src={currentTrack?.coverUrl}
-          alt={currentTrack?.title ?? "No track"}
+          src={player.currentTrack?.coverUrl}
+          alt={player.currentTrack?.title ?? "No track"}
           size="sm"
           className="shrink-0"
         />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-white">
-            {currentTrack?.title ?? "No track selected"}
+            {player.currentTrack?.title ?? "No track selected"}
           </p>
           <p className="truncate text-xs text-text-subdued">
-            {currentTrack ? formatArtists(currentTrack.artists) : "Select a track to play"}
+            {player.currentTrack
+              ? formatArtists(player.currentTrack.artists)
+              : "Select a track to play"}
           </p>
         </div>
-        {currentTrack && (
-          <LikeButton isLiked={false} onToggle={() => {}} size="sm" />
+        {player.currentTrack && (
+          <LikeButton
+            isLiked={isLiked(player.currentTrack.id)}
+            onToggle={() => toggleLike(player.currentTrack!)}
+            size="sm"
+          />
         )}
       </div>
 
       {/* Center: Controls + Progress */}
       <div className="flex w-[40%] max-w-2xl flex-col items-center gap-1">
         <PlayerControls
-          isPlaying={isPlaying}
-          shuffle={shuffle}
-          repeatMode={repeatMode}
-          onTogglePlay={togglePlay}
-          onPrevious={previousTrack}
-          onNext={nextTrack}
-          onToggleShuffle={onToggleShuffle}
-          onCycleRepeat={onCycleRepeat}
+          isPlaying={player.isPlaying}
+          shuffle={player.shuffle}
+          repeatMode={player.repeatMode}
+          onTogglePlay={player.togglePlay}
+          onPrevious={player.previousTrack}
+          onNext={player.nextTrack}
+          onToggleShuffle={queue.toggleShuffle}
+          onCycleRepeat={queue.cycleRepeatMode}
           size="md"
-          disabled={!currentTrack || !!error}
+          disabled={!player.currentTrack || !!player.error}
         />
         <div className="w-full max-w-xl">
-          {error ? (
-            <p className="text-center text-xs text-error">{error}</p>
-          ) : loading ? (
+          {player.error ? (
+            <p className="text-center text-xs text-error">{player.error}</p>
+          ) : player.loading ? (
             <div className="flex items-center justify-center gap-2">
               <div className="h-1 w-full max-w-xl animate-pulse rounded-full bg-white/10" />
             </div>
           ) : (
             <ProgressBar
-              current={currentTime}
-              total={duration}
-              onSeek={seek}
+              current={player.currentTime}
+              total={player.duration}
+              onSeek={player.seek}
               size="sm"
             />
           )}
@@ -86,10 +76,10 @@ export function PlayerLayout() {
       {/* Right: Volume */}
       <div className="flex w-[30%] items-center justify-end gap-2">
         <VolumeControl
-          volume={volume}
-          muted={muted}
-          onVolumeChange={setVolume}
-          onToggleMute={toggleMute}
+          volume={player.volume}
+          muted={player.muted}
+          onVolumeChange={player.setVolume}
+          onToggleMute={player.toggleMute}
           size="sm"
         />
       </div>

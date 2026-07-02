@@ -1,8 +1,9 @@
 import { useCallback } from "react";
 import { Play, Pause } from "lucide-react";
-import { usePlayerStore, useQueueStore } from "@/store";
+import { usePlayerStore, useQueueStore, useLibraryStore } from "@/store";
 import { formatDuration } from "@/utils";
 import { MediaImage } from "./MediaImage";
+import { LikeButton } from "./LikeButton";
 import type { Song } from "@/types";
 
 interface TrackRowProps {
@@ -13,7 +14,7 @@ interface TrackRowProps {
   showCover?: boolean;
   selected?: boolean;
   onPlay?: () => void;
-  onAddToQueue?: () => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 export function TrackRow({
@@ -24,10 +25,13 @@ export function TrackRow({
   showCover = true,
   selected = false,
   onPlay,
+  onContextMenu,
 }: TrackRowProps) {
   const currentTrackId = usePlayerStore((s) => s.currentTrack?.id);
   const isCurrentTrack = currentTrackId === track.id;
   const isPlaying = usePlayerStore((s) => s.isPlaying && isCurrentTrack);
+  const isLiked = useLibraryStore((s) => s.likedSongs.some((ls) => ls.id === track.id));
+  const toggleLikedSong = useLibraryStore((s) => s.toggleLikedSong);
 
   const handlePlay = useCallback(() => {
     if (onPlay) {
@@ -38,7 +42,10 @@ export function TrackRow({
       if (existingIdx >= 0) {
         useQueueStore.getState().playNext();
       } else {
-        q.addTrack(track);
+        const playerState = usePlayerStore.getState();
+        const qState = useQueueStore.getState();
+        qState.setQueue([track], 0);
+        playerState.loadTrack(track);
       }
     }
   }, [track, onPlay]);
@@ -48,6 +55,7 @@ export function TrackRow({
       role="button"
       tabIndex={0}
       onClick={handlePlay}
+      onContextMenu={onContextMenu}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") handlePlay();
       }}
@@ -56,7 +64,6 @@ export function TrackRow({
         selected || isCurrentTrack ? "bg-white/10" : ""
       }`}
     >
-      {/* Index or Play icon */}
       <div className="flex w-6 shrink-0 items-center justify-center">
         <span className="w-4 text-right text-sm text-text-muted group-hover/track:hidden">
           {index ?? ""}
@@ -69,11 +76,14 @@ export function TrackRow({
           className="hidden text-white group-hover/track:block"
           aria-label={isPlaying ? "Pause" : "Play"}
         >
-          {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+          {isPlaying ? (
+            <Pause size={14} fill="currentColor" />
+          ) : (
+            <Play size={14} fill="currentColor" />
+          )}
         </button>
       </div>
 
-      {/* Cover */}
       {showCover && (
         <MediaImage
           src={track.coverUrl}
@@ -83,7 +93,6 @@ export function TrackRow({
         />
       )}
 
-      {/* Track info */}
       <div className="flex min-w-0 flex-1 items-center gap-4">
         <div className="min-w-0 flex-1">
           <p
@@ -100,17 +109,27 @@ export function TrackRow({
           )}
         </div>
 
-        {/* Album name */}
         {showAlbum && (
           <p className="hidden w-40 truncate text-sm text-text-subdued md:block">
             {track.album.title}
           </p>
         )}
 
-        {/* Duration */}
-        <p className="w-12 text-right text-sm tabular-nums text-text-subdued">
-          {formatDuration(track.duration)}
-        </p>
+        <div className="flex items-center gap-1">
+          <div
+            className="opacity-0 transition-opacity group-hover/track:opacity-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <LikeButton
+              isLiked={isLiked}
+              onToggle={() => toggleLikedSong(track)}
+              size="sm"
+            />
+          </div>
+          <p className="w-12 text-right text-sm tabular-nums text-text-subdued">
+            {formatDuration(track.duration)}
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 import { useCallback, useEffect } from "react";
-import { usePlayerStore, useQueueStore } from "@/store";
+import { usePlayerStore, useQueueStore, useLibraryStore } from "@/store";
 import { audioPlayerService } from "@/services/audio";
 import type { Song } from "@/types";
 import { useAudio } from "./useAudio";
+import { useMediaSession } from "./useMediaSession";
 
 export function usePlayer() {
   useAudio();
@@ -62,20 +63,34 @@ export function usePlayer() {
     };
 
     const onError = () => {
-      usePlayerStore.getState().setError("Playback failed. The audio file may be missing or unsupported.");
+      usePlayerStore.getState().setError(
+        "Playback failed. The audio file may be missing or unsupported.",
+      );
     };
 
     const onEnded = () => {
       usePlayerStore.getState().pause();
       const q = useQueueStore.getState();
+
+      const prevTrack = q.queue[q.currentIndex]?.song ?? null;
+      if (prevTrack) {
+        q.pushHistory(q.queue[q.currentIndex]!);
+      }
+
       const nextIndex = q.playNext();
       if (nextIndex !== null && q.queue[nextIndex]) {
         const nextTrack = q.queue[nextIndex]!.song;
         usePlayerStore.getState().loadTrack(nextTrack);
         audioPlayerService.load(nextTrack.audioUrl);
         audioPlayerService.play().then(
-          () => usePlayerStore.getState().play(),
-          (err) => usePlayerStore.getState().setError(err?.message ?? "Playback failed"),
+          () => {
+            usePlayerStore.getState().play();
+            useLibraryStore.getState().addRecentlyPlayed(nextTrack);
+          },
+          (err) =>
+            usePlayerStore
+              .getState()
+              .setError(err?.message ?? "Playback failed"),
         );
       }
     };
@@ -104,8 +119,14 @@ export function usePlayer() {
       usePlayerStore.getState().loadTrack(track);
       audioPlayerService.load(track.audioUrl);
       audioPlayerService.play().then(
-        () => usePlayerStore.getState().play(),
-        (err) => usePlayerStore.getState().setError(err?.message ?? "Playback failed"),
+        () => {
+          usePlayerStore.getState().play();
+          useLibraryStore.getState().addRecentlyPlayed(track);
+        },
+        (err) =>
+          usePlayerStore
+            .getState()
+            .setError(err?.message ?? "Playback failed"),
       );
     },
     [],
@@ -120,13 +141,22 @@ export function usePlayer() {
     } else {
       audioPlayerService.play().then(
         () => usePlayerStore.getState().play(),
-        (err) => usePlayerStore.getState().setError(err?.message ?? "Playback failed"),
+        (err) =>
+          usePlayerStore
+            .getState()
+            .setError(err?.message ?? "Playback failed"),
       );
     }
   }, []);
 
   const nextTrack = useCallback(() => {
     const q = useQueueStore.getState();
+
+    const prevTrack = q.queue[q.currentIndex]?.song ?? null;
+    if (prevTrack) {
+      q.pushHistory(q.queue[q.currentIndex]!);
+    }
+
     const nextIndex = q.playNext();
     if (nextIndex !== null && q.queue[nextIndex]) {
       playTrack(q.queue[nextIndex]!.song);
@@ -178,6 +208,14 @@ export function usePlayer() {
     },
     [],
   );
+
+  useMediaSession({
+    onPlay: togglePlay,
+    onPause: togglePlay,
+    onNext: nextTrack,
+    onPrevious: previousTrack,
+    onSeek: seek,
+  });
 
   return {
     currentTrack,

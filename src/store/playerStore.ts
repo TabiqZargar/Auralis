@@ -1,6 +1,8 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { Song } from "@/types";
 import { PLAYER } from "@/constants";
+import { zustandStorage } from "./persist";
 
 export interface PlayerState {
   currentTrack: Song | null;
@@ -41,43 +43,56 @@ const initialState: PlayerState = {
   error: null,
 };
 
-export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
-  ...initialState,
+export const usePlayerStore = create<PlayerState & PlayerActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  play: () => set({ isPlaying: true, error: null }),
+      play: () => set({ isPlaying: true, error: null }),
 
-  pause: () => set({ isPlaying: false }),
+      pause: () => set({ isPlaying: false }),
 
-  toggle: () => set((state) => ({ isPlaying: !state.isPlaying })),
+      toggle: () => set((state) => ({ isPlaying: !state.isPlaying })),
 
-  loadTrack: (track) =>
-    set({
-      currentTrack: track,
-      currentTime: 0,
-      duration: 0,
-      loading: true,
-      error: null,
-      isPlaying: false,
+      loadTrack: (track) =>
+        set({
+          currentTrack: track,
+          currentTime: 0,
+          duration: 0,
+          loading: true,
+          error: null,
+          isPlaying: false,
+        }),
+
+      seek: (time) => set({ currentTime: time }),
+
+      setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
+
+      toggleMute: () => set((state) => ({ muted: !state.muted })),
+
+      setPlaybackRate: (rate) =>
+        set({ playbackRate: Math.max(0.25, Math.min(4, rate)) }),
+
+      updateProgress: (currentTime, duration) =>
+        set({
+          currentTime,
+          duration: duration || 0,
+        }),
+
+      setLoading: (loading) => set({ loading }),
+
+      setError: (error) => set({ error, loading: false }),
+
+      resetPlayer: () => set(initialState),
     }),
-
-  seek: (time) => set({ currentTime: time }),
-
-  setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
-
-  toggleMute: () => set((state) => ({ muted: !state.muted })),
-
-  setPlaybackRate: (rate) =>
-    set({ playbackRate: Math.max(0.25, Math.min(4, rate)) }),
-
-  updateProgress: (currentTime, duration) =>
-    set({
-      currentTime,
-      duration: duration || 0,
-    }),
-
-  setLoading: (loading) => set({ loading }),
-
-  setError: (error) => set({ error, loading: false }),
-
-  resetPlayer: () => set(initialState),
-}));
+    {
+      name: "player",
+      storage: zustandStorage,
+      partialize: (state) => ({
+        volume: state.volume,
+        muted: state.muted,
+        playbackRate: state.playbackRate,
+      }),
+    },
+  ),
+);

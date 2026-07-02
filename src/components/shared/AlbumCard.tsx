@@ -1,6 +1,10 @@
 import { useNavigate } from "react-router";
 import { ROUTE_BUILDERS } from "@/constants";
 import { MediaImage } from "./MediaImage";
+import { useContextMenuStore } from "@/store/contextMenuStore";
+import { useQueueStore, usePlayerStore } from "@/store";
+import { useToastStore } from "@/store/toastStore";
+import { Play, ListPlus, Disc3 } from "lucide-react";
 import type { Album } from "@/types";
 
 interface AlbumCardProps {
@@ -27,9 +31,43 @@ export function AlbumCard({ album, size = "md", onClick }: AlbumCardProps) {
     }
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const open = useContextMenuStore.getState().open;
+    open(e.clientX, e.clientY, [
+      {
+        label: "Play Album",
+        icon: <Play size={14} />,
+        onClick: () => {
+          if (album.songs.length > 0) {
+            const q = useQueueStore.getState();
+            const p = usePlayerStore.getState();
+            q.setQueue(album.songs, 0);
+            p.loadTrack(album.songs[0]!);
+          }
+        },
+      },
+      {
+        label: "Add to Queue",
+        icon: <ListPlus size={14} />,
+        onClick: () => {
+          const q = useQueueStore.getState();
+          album.songs.forEach((song) => q.addTrack(song));
+          useToastStore.getState().addToast("Album added to queue", "success", 2000);
+        },
+      },
+      {
+        label: "Go to Album",
+        icon: <Disc3 size={14} />,
+        onClick: () => navigate(ROUTE_BUILDERS.album(album.id)),
+      },
+    ]);
+  };
+
   return (
     <button
       onClick={handleClick}
+      onContextMenu={handleContextMenu}
       className="group/card flex w-full flex-col items-start gap-2 rounded-md bg-transparent p-3 text-left transition-colors hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className={`${card}`}>
