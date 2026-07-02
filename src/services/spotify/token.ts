@@ -1,7 +1,22 @@
 import { config } from "@/config";
 
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 let cachedToken: { accessToken: string; expiresAt: number } | null = null;
 let pendingFetch: Promise<string> | null = null;
+
+function isTokenResponse(data: unknown): data is TokenResponse {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    typeof (data as Record<string, unknown>).access_token === "string" &&
+    typeof (data as Record<string, unknown>).expires_in === "number"
+  );
+}
 
 export async function getSpotifyToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt) {
@@ -39,12 +54,16 @@ export async function getSpotifyToken(): Promise<string> {
       );
     }
 
-    const data = await response.json();
-    const expiresIn = (data.expires_in as number) ?? 3600;
+    const data: unknown = await response.json();
+
+    if (!isTokenResponse(data)) {
+      pendingFetch = null;
+      throw new Error("Invalid token response from Spotify API");
+    }
 
     cachedToken = {
-      accessToken: data.access_token as string,
-      expiresAt: Date.now() + (expiresIn - 60) * 1000,
+      accessToken: data.access_token,
+      expiresAt: Date.now() + (data.expires_in - 60) * 1000,
     };
 
     pendingFetch = null;

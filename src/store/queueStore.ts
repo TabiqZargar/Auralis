@@ -7,7 +7,12 @@ function shuffleIndices(length: number): number[] {
   const indices = Array.from({ length }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j]!, indices[i]!];
+    const a = indices[j];
+    const b = indices[i];
+    if (a !== undefined && b !== undefined) {
+      indices[i] = a;
+      indices[j] = b;
+    }
   }
   return indices;
 }
@@ -87,7 +92,8 @@ export const useQueueStore = create<QueueState & QueueActions>()(
                 const base = state.shuffledOrder;
                 const pos = base.indexOf(state.currentIndex);
                 const adjusted = base.map((i) => (i >= insertIndex ? i + 1 : i));
-                adjusted.splice((pos ?? base.length) + 1, 0, insertIndex);
+                const splicePos = pos >= 0 ? pos + 1 : base.length;
+                adjusted.splice(splicePos, 0, insertIndex);
                 return adjusted;
               })()
             : state.shuffledOrder;
@@ -145,11 +151,14 @@ export const useQueueStore = create<QueueState & QueueActions>()(
             if (repeatMode === "all") {
               const newOrder = shuffleIndices(queue.length);
               set({ shuffledOrder: newOrder });
-              return newOrder[0]!;
+              const first = newOrder[0];
+              return first ?? null;
             }
             return null;
           }
-          nextIndex = shuffledOrder[nextShufflePos]!;
+          const candidate = shuffledOrder[nextShufflePos];
+          if (candidate === undefined) return null;
+          nextIndex = candidate;
         } else {
           nextIndex = currentIndex + 1;
           if (nextIndex >= queue.length) {
@@ -169,14 +178,16 @@ export const useQueueStore = create<QueueState & QueueActions>()(
         const { queue, currentIndex, shuffle, shuffledOrder, history } = get();
 
         if (history.length > 0) {
-          const prev = history[history.length - 1]!;
-          const prevIdx = queue.findIndex((item) => item.song.id === prev.song.id);
-          if (prevIdx >= 0) {
-            set({
-              currentIndex: prevIdx,
-              history: history.slice(0, -1),
-            });
-            return prevIdx;
+          const prev = history[history.length - 1];
+          if (prev !== undefined) {
+            const prevIdx = queue.findIndex((item) => item.song.id === prev.song.id);
+            if (prevIdx >= 0) {
+              set({
+                currentIndex: prevIdx,
+                history: history.slice(0, -1),
+              });
+              return prevIdx;
+            }
           }
         }
 
@@ -187,9 +198,13 @@ export const useQueueStore = create<QueueState & QueueActions>()(
           const currentShufflePos = shuffledOrder.indexOf(currentIndex);
           const prevShufflePos = currentShufflePos - 1;
           if (prevShufflePos < 0) {
-            prevIndex = shuffledOrder[shuffledOrder.length - 1]!;
+            const last = shuffledOrder[shuffledOrder.length - 1];
+            if (last === undefined) return null;
+            prevIndex = last;
           } else {
-            prevIndex = shuffledOrder[prevShufflePos]!;
+            const candidate = shuffledOrder[prevShufflePos];
+            if (candidate === undefined) return null;
+            prevIndex = candidate;
           }
         } else {
           prevIndex = currentIndex - 1;
@@ -258,8 +273,9 @@ export const useQueueStore = create<QueueState & QueueActions>()(
         set((state) => {
           const modes: RepeatMode[] = ["off", "all", "one"];
           const currentIdx = modes.indexOf(state.repeatMode);
-          const nextMode = modes[(currentIdx + 1) % modes.length]!;
-          return { repeatMode: nextMode };
+          const nextIdx = (currentIdx + 1) % modes.length;
+          const nextMode = modes[nextIdx];
+          return { repeatMode: nextMode ?? "off" };
         }),
 
       getCurrentTrack: () => {
@@ -280,7 +296,8 @@ export const useQueueStore = create<QueueState & QueueActions>()(
       popHistory: () => {
         const { history } = get();
         if (history.length === 0) return null;
-        const item = history[history.length - 1]!;
+        const item = history[history.length - 1];
+        if (item === undefined) return null;
         set({ history: history.slice(0, -1) });
         return item;
       },

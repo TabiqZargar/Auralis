@@ -74,24 +74,30 @@ export function usePlayer() {
 
       const prevTrack = q.queue[q.currentIndex]?.song ?? null;
       if (prevTrack) {
-        q.pushHistory(q.queue[q.currentIndex]!);
+        const prevItem = q.queue[q.currentIndex];
+        if (prevItem) {
+          q.pushHistory(prevItem);
+        }
       }
 
       const nextIndex = q.playNext();
-      if (nextIndex !== null && q.queue[nextIndex]) {
-        const nextTrack = q.queue[nextIndex]!.song;
-        usePlayerStore.getState().loadTrack(nextTrack);
-        audioPlayerService.load(nextTrack.audioUrl);
-        audioPlayerService.play().then(
-          () => {
-            usePlayerStore.getState().play();
-            useLibraryStore.getState().addRecentlyPlayed(nextTrack);
-          },
-          (err) =>
-            usePlayerStore
-              .getState()
-              .setError(err?.message ?? "Playback failed"),
-        );
+      if (nextIndex !== null) {
+        const nextItem = q.queue[nextIndex];
+        if (nextItem) {
+          const nextTrack = nextItem.song;
+          usePlayerStore.getState().loadTrack(nextTrack);
+          audioPlayerService.load(nextTrack.audioUrl);
+          audioPlayerService.play().then(
+            () => {
+              usePlayerStore.getState().play();
+              useLibraryStore.getState().addRecentlyPlayed(nextTrack);
+            },
+            (err) =>
+              usePlayerStore
+                .getState()
+                .setError(err?.message ?? "Playback failed"),
+          );
+        }
       }
     };
 
@@ -154,12 +160,18 @@ export function usePlayer() {
 
     const prevTrack = q.queue[q.currentIndex]?.song ?? null;
     if (prevTrack) {
-      q.pushHistory(q.queue[q.currentIndex]!);
+      const prevItem = q.queue[q.currentIndex];
+      if (prevItem) {
+        q.pushHistory(prevItem);
+      }
     }
 
     const nextIndex = q.playNext();
-    if (nextIndex !== null && q.queue[nextIndex]) {
-      playTrack(q.queue[nextIndex]!.song);
+    if (nextIndex !== null) {
+      const nextItem = q.queue[nextIndex];
+      if (nextItem) {
+        playTrack(nextItem.song);
+      }
     } else {
       usePlayerStore.getState().pause();
     }
@@ -174,8 +186,11 @@ export function usePlayer() {
     }
     const q = useQueueStore.getState();
     const prevIndex = q.playPrevious();
-    if (prevIndex !== null && q.queue[prevIndex]) {
-      playTrack(q.queue[prevIndex]!.song);
+    if (prevIndex !== null) {
+      const prevItem = q.queue[prevIndex];
+      if (prevItem) {
+        playTrack(prevItem.song);
+      }
     }
   }, [playTrack]);
 

@@ -10,7 +10,7 @@ export const spotifyClient = {
   put<T>(path: string, data?: unknown) {
     return apiClient.put<T>(`/spotify${path}`, data).then((r) => r.data);
   },
-  delete<T>(path: string) {
-    return apiClient.delete<T>(`/spotify${path}`).then((r) => r.data);
+  delete<T>(path: string, config?: Record<string, unknown>) {
+    return apiClient.delete<T>(`/spotify${path}`, config).then((r) => r.data);
   },
 };

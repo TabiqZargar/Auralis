@@ -20,11 +20,13 @@ function generateToneBuffer(
 
     const fadeDuration = 0.05;
     const fadeSamples = Math.floor(sampleRate * fadeDuration);
-    if (i < fadeSamples) {
-      buffer[i] *= i / fadeSamples;
-    }
-    if (i > length - fadeSamples) {
-      buffer[i] *= (length - i) / fadeSamples;
+    const val = buffer[i];
+    if (val !== undefined) {
+      if (i < fadeSamples) {
+        buffer[i] = val * (i / fadeSamples);
+      } else if (i > length - fadeSamples) {
+        buffer[i] = val * ((length - i) / fadeSamples);
+      }
     }
   }
   return buffer;

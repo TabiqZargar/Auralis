@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Outlet, useLocation } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { PlayerLayout } from "@/components/layout/PlayerLayout";
 import { NowPlayingOverlay } from "@/components/layout/NowPlayingOverlay";
 import { QueuePanel } from "@/components/layout/QueuePanel";
@@ -196,10 +198,10 @@ export function RootLayout() {
       <DynamicBackground />
 
       <div className="relative z-10 flex flex-1 overflow-hidden">
-        {/* Sidebar placeholder */}
-        <aside className="hidden w-[--sidebar-width] shrink-0 border-r border-white/5 bg-surface/80 backdrop-blur-xl md:block">
-          {/* Sidebar - to be implemented */}
-        </aside>
+        {/* Sidebar */}
+        <div className="hidden shrink-0 md:block">
+          <Sidebar />
+        </div>
 
         {/* Main content with page transitions */}
         <main className="relative flex flex-1 flex-col overflow-y-auto">
@@ -244,6 +246,9 @@ export function RootLayout() {
           onClose={cm.close}
         />
       )}
+
+      {/* Mobile Navigation */}
+      <MobileNav />
 
       {/* Toasts */}
       <ToastContainer />

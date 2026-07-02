@@ -12,9 +12,15 @@ export function LyricsPanel({ lyrics, className = "" }: LyricsPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<(HTMLParagraphElement | null)[]>([]);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const currentLineIndex = lyrics.findLastIndex((l) => l.time <= currentTime);
+  let currentLineIndex = -1;
+  for (let i = lyrics.length - 1; i >= 0; i--) {
+    if (lyrics[i] && lyrics[i]!.time <= currentTime) {
+      currentLineIndex = i;
+      break;
+    }
+  }
 
   const handleScroll = useCallback(() => {
     setIsUserScrolling(true);
