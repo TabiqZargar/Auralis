@@ -13,23 +13,11 @@ export const config = {
   },
 
   spotify: {
+    apiBaseUrl: "https://api.spotify.com/v1",
+    accountsBaseUrl: "https://accounts.spotify.com",
     clientId: import.meta.env.VITE_SPOTIFY_CLIENT_ID ?? "",
-    redirectUri: import.meta.env.VITE_SPOTIFY_REDIRECT_URI ?? "http://localhost:5173/callback",
-    scopes: [
-      "user-read-email",
-      "user-read-private",
-      "user-library-read",
-      "user-library-modify",
-      "playlist-read-private",
-      "playlist-modify-public",
-      "playlist-modify-private",
-      "user-read-playback-state",
-      "user-modify-playback-state",
-      "user-read-currently-playing",
-      "user-read-recently-played",
-      "user-top-read",
-      "streaming",
-    ],
+    clientSecret: import.meta.env.VITE_SPOTIFY_CLIENT_SECRET ?? "",
+    tokenEndpoint: "/api/token",
   },
 
   storage: {
