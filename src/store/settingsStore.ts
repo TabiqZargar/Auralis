@@ -1,7 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { SettingsState } from "@/types";
-import { zustandStorage } from "./persist";
 
 interface SettingsActions {
   setAudioQuality: (quality: SettingsState["audioQuality"]) => void;
@@ -34,31 +32,19 @@ const initialState: SettingsState = {
   socialFeatures: true,
 };
 
-export const useSettingsStore = create<SettingsState & SettingsActions>()(
-  persist(
-    (set) => ({
-      ...initialState,
-      setAudioQuality: (quality) => set({ audioQuality: quality }),
-      setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
-      setEqualizerPreset: (preset) => set({ equalizerPreset: preset }),
-      setEqualizerBands: (bands) => set({ equalizerBands: bands }),
-      setLanguage: (lang) => set({ language: lang }),
-      toggleLyrics: () => set((s) => ({ showLyrics: !s.showLyrics })),
-      toggleVisualizer: () => set((s) => ({ showVisualizer: !s.showVisualizer })),
-      toggleGaplessPlayback: () =>
-        set((s) => ({ gaplessPlayback: !s.gaplessPlayback })),
-      toggleAutoPlay: () => set((s) => ({ autoPlay: !s.autoPlay })),
-      toggleKeyboardShortcuts: () =>
-        set((s) => ({ keyboardShortcuts: !s.keyboardShortcuts })),
-      toggleNotifications: () =>
-        set((s) => ({ notificationsEnabled: !s.notificationsEnabled })),
-      toggleSocialFeatures: () =>
-        set((s) => ({ socialFeatures: !s.socialFeatures })),
-      reset: () => set(initialState),
-    }),
-    {
-      name: "settings",
-      storage: zustandStorage,
-    },
-  ),
-);
+export const useSettingsStore = create<SettingsState & SettingsActions>((set) => ({
+  ...initialState,
+  setAudioQuality: (quality) => set({ audioQuality: quality }),
+  setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
+  setEqualizerPreset: (preset) => set({ equalizerPreset: preset }),
+  setEqualizerBands: (bands) => set({ equalizerBands: bands }),
+  setLanguage: (lang) => set({ language: lang }),
+  toggleLyrics: () => set((s) => ({ showLyrics: !s.showLyrics })),
+  toggleVisualizer: () => set((s) => ({ showVisualizer: !s.showVisualizer })),
+  toggleGaplessPlayback: () => set((s) => ({ gaplessPlayback: !s.gaplessPlayback })),
+  toggleAutoPlay: () => set((s) => ({ autoPlay: !s.autoPlay })),
+  toggleKeyboardShortcuts: () => set((s) => ({ keyboardShortcuts: !s.keyboardShortcuts })),
+  toggleNotifications: () => set((s) => ({ notificationsEnabled: !s.notificationsEnabled })),
+  toggleSocialFeatures: () => set((s) => ({ socialFeatures: !s.socialFeatures })),
+  reset: () => set(initialState),
+}));

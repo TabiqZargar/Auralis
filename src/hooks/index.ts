@@ -4,8 +4,3 @@ export { useQueue } from "./useQueue";
 export { useDebounce } from "./useDebounce";
 export { useTheme } from "./useTheme";
 export { useVisualizer } from "./useVisualizer";
-export { useFavorites } from "./useFavorites";
-export { usePlaylists } from "./usePlaylists";
-export { useKeyboardShortcuts } from "./useKeyboardShortcuts";
-export { useMediaSession } from "./useMediaSession";
-export { useDynamicTheme } from "./useDynamicTheme";

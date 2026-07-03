@@ -1,64 +1,50 @@
 import { useCallback, useEffect, useRef } from "react";
 import { audioPlayerService } from "@/services/audio";
+import { usePlayerStore } from "@/store";
 
 export function useAudio() {
-  const initializedRef = useRef(false);
+  const playerRef = useRef(audioPlayerService);
+  const { volume, muted, currentSong, status } = usePlayerStore();
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-    audioPlayerService.initialize();
+    playerRef.current.initialize();
     return () => {
-      audioPlayerService.destroy();
-      initializedRef.current = false;
+      playerRef.current.destroy();
     };
   }, []);
 
+  useEffect(() => {
+    playerRef.current.setVolume(muted ? 0 : volume);
+  }, [volume, muted]);
+
   const load = useCallback((src: string) => {
-    audioPlayerService.load(src);
+    playerRef.current.load(src);
   }, []);
 
   const play = useCallback(() => {
-    return audioPlayerService.play();
+    return playerRef.current.play();
   }, []);
 
   const pause = useCallback(() => {
-    audioPlayerService.pause();
-  }, []);
-
-  const togglePlay = useCallback(() => {
-    return audioPlayerService.togglePlay();
+    playerRef.current.pause();
   }, []);
 
   const seek = useCallback((time: number) => {
-    audioPlayerService.seek(time);
-  }, []);
-
-  const setVolume = useCallback((value: number) => {
-    audioPlayerService.setVolume(value);
-  }, []);
-
-  const toggleMute = useCallback(() => {
-    audioPlayerService.toggleMute();
+    playerRef.current.seek(time);
   }, []);
 
   const setPlaybackRate = useCallback((rate: number) => {
-    audioPlayerService.setPlaybackRate(rate);
-  }, []);
-
-  const stop = useCallback(() => {
-    audioPlayerService.stop();
+    playerRef.current.setPlaybackRate(rate);
   }, []);
 
   return {
     load,
     play,
     pause,
-    togglePlay,
     seek,
-    setVolume,
-    toggleMute,
     setPlaybackRate,
-    stop,
+    element: playerRef.current.getElement(),
+    isPlaying: status === "playing",
+    currentSong,
   };
 }

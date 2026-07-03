@@ -13,8 +13,3 @@ export { LikeButton } from "./LikeButton";
 export { TrackList } from "./TrackList";
 export { GridView } from "./GridView";
 export { Section } from "./Section";
-export { ToastContainer } from "./ToastContainer";
-export { DynamicBackground } from "./DynamicBackground";
-export { AudioVisualizer } from "./AudioVisualizer";
-export { Equalizer } from "./Equalizer";
-export { LyricsPanel } from "./LyricsPanel";

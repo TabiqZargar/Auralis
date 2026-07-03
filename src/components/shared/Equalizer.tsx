@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { audioEngine } from "@/lib/audio";
+import { getCSSVariableColor, hexToRgba } from "@/utils/color";
 
 interface EqualizerProps {
   barCount?: number;
@@ -23,6 +24,7 @@ export function Equalizer({ barCount = 10, className = "" }: EqualizerProps) {
 
     const render = () => {
       ctx.clearRect(0, 0, w, h);
+      const accent = getCSSVariableColor("--dynamic-accent", "#1db954");
       const freq = audioEngine.getFrequencyData();
       const len = Math.min(freq.length, barCount);
       const step = Math.floor(freq.length / barCount);
@@ -36,8 +38,8 @@ export function Equalizer({ barCount = 10, className = "" }: EqualizerProps) {
         const y = h - barH;
 
         const gradient = ctx.createLinearGradient(x, y, x, h);
-        gradient.addColorStop(0, "var(--dynamic-accent, #1db954)");
-        gradient.addColorStop(1, "rgba(29,185,84,0.2)");
+        gradient.addColorStop(0, accent);
+        gradient.addColorStop(1, hexToRgba(accent, 0.2));
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.roundRect(x, y, barW - 2, barH, [2, 2, 0, 0]);

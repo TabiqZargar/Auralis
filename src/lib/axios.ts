@@ -1,6 +1,5 @@
 import axios from "axios";
 import { config } from "@/config";
-import { storageService } from "@/services/storage";
 
 export const apiClient = axios.create({
   baseURL: config.api.baseURL,
@@ -12,7 +11,7 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (request) => {
-    const token = storageService.get<string>("access_token");
+    const token = localStorage.getItem(`${config.storage.prefix}access_token`);
     if (token) {
       request.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,7 +24,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      storageService.remove("access_token");
+      localStorage.removeItem(`${config.storage.prefix}access_token`);
     }
     return Promise.reject(error);
   },

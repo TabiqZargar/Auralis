@@ -1,7 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { ThemeState } from "@/types";
-import { zustandStorage } from "./persist";
 
 interface ThemeActions {
   setMode: (mode: ThemeState["mode"]) => void;
@@ -18,19 +16,11 @@ const initialState: ThemeState = {
   compactMode: false,
 };
 
-export const useThemeStore = create<ThemeState & ThemeActions>()(
-  persist(
-    (set) => ({
-      ...initialState,
-      setMode: (mode) => set({ mode }),
-      setAccentColor: (color) => set({ accentColor: color }),
-      setReducedMotion: (value) => set({ reducedMotion: value }),
-      setCompactMode: (value) => set({ compactMode: value }),
-      reset: () => set(initialState),
-    }),
-    {
-      name: "theme",
-      storage: zustandStorage,
-    },
-  ),
-);
+export const useThemeStore = create<ThemeState & ThemeActions>((set) => ({
+  ...initialState,
+  setMode: (mode) => set({ mode }),
+  setAccentColor: (color) => set({ accentColor: color }),
+  setReducedMotion: (value) => set({ reducedMotion: value }),
+  setCompactMode: (value) => set({ compactMode: value }),
+  reset: () => set(initialState),
+}));

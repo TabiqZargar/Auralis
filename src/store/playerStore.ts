@@ -1,98 +1,43 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { Song } from "@/types";
-import { PLAYER } from "@/constants";
-import { zustandStorage } from "./persist";
+import type { PlayerState, Song, RepeatMode, ShuffleMode } from "@/types";
 
-export interface PlayerState {
-  currentTrack: Song | null;
-  isPlaying: boolean;
-  duration: number;
-  currentTime: number;
-  volume: number;
-  muted: boolean;
-  playbackRate: number;
-  loading: boolean;
-  error: string | null;
-}
-
-export interface PlayerActions {
-  play: () => void;
-  pause: () => void;
-  toggle: () => void;
-  loadTrack: (track: Song) => void;
-  seek: (time: number) => void;
+interface PlayerActions {
+  setCurrentSong: (song: Song | null) => void;
+  setStatus: (status: PlayerState["status"]) => void;
+  setCurrentTime: (time: number) => void;
+  setDuration: (duration: number) => void;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
-  setPlaybackRate: (rate: number) => void;
-  updateProgress: (currentTime: number, duration: number) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  resetPlayer: () => void;
+  setRepeat: (mode: RepeatMode) => void;
+  setShuffle: (mode: ShuffleMode) => void;
+  setCrossfade: (enabled: boolean, duration?: number) => void;
+  reset: () => void;
 }
 
 const initialState: PlayerState = {
-  currentTrack: null,
-  isPlaying: false,
-  duration: 0,
+  currentSong: null,
+  status: "idle",
   currentTime: 0,
-  volume: PLAYER.DEFAULT_VOLUME,
+  duration: 0,
+  volume: 0.7,
   muted: false,
-  playbackRate: 1,
-  loading: false,
-  error: null,
+  repeat: "off",
+  shuffle: "off",
+  crossfadeEnabled: false,
+  crossfadeDuration: 3,
 };
 
-export const usePlayerStore = create<PlayerState & PlayerActions>()(
-  persist(
-    (set) => ({
-      ...initialState,
-
-      play: () => set({ isPlaying: true, error: null }),
-
-      pause: () => set({ isPlaying: false }),
-
-      toggle: () => set((state) => ({ isPlaying: !state.isPlaying })),
-
-      loadTrack: (track) =>
-        set({
-          currentTrack: track,
-          currentTime: 0,
-          duration: 0,
-          loading: true,
-          error: null,
-          isPlaying: false,
-        }),
-
-      seek: (time) => set({ currentTime: time }),
-
-      setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
-
-      toggleMute: () => set((state) => ({ muted: !state.muted })),
-
-      setPlaybackRate: (rate) =>
-        set({ playbackRate: Math.max(0.25, Math.min(4, rate)) }),
-
-      updateProgress: (currentTime, duration) =>
-        set({
-          currentTime,
-          duration: duration || 0,
-        }),
-
-      setLoading: (loading) => set({ loading }),
-
-      setError: (error) => set({ error, loading: false }),
-
-      resetPlayer: () => set(initialState),
-    }),
-    {
-      name: "player",
-      storage: zustandStorage,
-      partialize: (state) => ({
-        volume: state.volume,
-        muted: state.muted,
-        playbackRate: state.playbackRate,
-      }),
-    },
-  ),
-);
+export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
+  ...initialState,
+  setCurrentSong: (song) => set({ currentSong: song, currentTime: 0, status: "loading" }),
+  setStatus: (status) => set({ status }),
+  setCurrentTime: (time) => set({ currentTime: time }),
+  setDuration: (duration) => set({ duration }),
+  setVolume: (volume) => set({ volume }),
+  toggleMute: () => set((state) => ({ muted: !state.muted })),
+  setRepeat: (mode) => set({ repeat: mode }),
+  setShuffle: (mode) => set({ shuffle: mode }),
+  setCrossfade: (enabled, duration) =>
+    set({ crossfadeEnabled: enabled, ...(duration !== undefined && { crossfadeDuration: duration }) }),
+  reset: () => set(initialState),
+}));
