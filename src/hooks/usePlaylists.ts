@@ -78,11 +78,20 @@ export function usePlaylists() {
 
   const duplicatePlaylist = useCallback(
     (id: string) => {
-      const dup = useLibraryStore.getState().duplicatePlaylist(id);
-      if (dup) {
+      const store = useLibraryStore.getState();
+      const original = store.playlists.find((p) => p.id === id);
+      if (original) {
+        const dup: Playlist = {
+          ...original,
+          id: crypto.randomUUID(),
+          title: `${original.title} (copy)`,
+          updatedAt: new Date().toISOString(),
+        };
+        store.addPlaylist(dup);
         addToast(`Playlist duplicated as "${dup.title}"`, "success", 2500);
+        return dup;
       }
-      return dup;
+      return null;
     },
     [addToast],
   );

@@ -1,5 +1,4 @@
 import axios, { AxiosError } from "axios";
-import { config } from "@/config";
 
 let apiInstance: ReturnType<typeof axios.create> | null = null;
 
@@ -7,7 +6,7 @@ function getApi() {
   if (apiInstance) return apiInstance;
 
   apiInstance = axios.create({
-    baseURL: config.spotify.apiBaseUrl,
+    baseURL: "https://api.spotify.com/v1",
     timeout: 10000,
   });
 

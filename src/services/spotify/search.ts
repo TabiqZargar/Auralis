@@ -1,5 +1,5 @@
 import { spotifyClient } from "./client";
-import type { SearchResults, PaginatedResponse } from "@/types";
+import type { SearchResults } from "@/types";
 
 export const searchApi = {
   search(query: string, type = "track,album,artist,playlist", offset = 0, limit = 20) {

@@ -11,6 +11,9 @@ interface LibraryActions {
   addRecentlyPlayed: (song: Song) => void;
   toggleFollowArtist: (artistId: string) => void;
   toggleSaveAlbum: (albumId: string) => void;
+  addSongToPlaylist: (playlistId: string, song: Song) => void;
+  removeSongFromPlaylist: (playlistId: string, songId: string) => void;
+  reorderPlaylistSongs: (playlistId: string, from: number, to: number) => void;
   reset: () => void;
 }
 
@@ -54,6 +57,28 @@ export const useLibraryStore = create<LibraryState & LibraryActions>((set, get) 
       savedAlbums: state.savedAlbums.includes(albumId)
         ? state.savedAlbums.filter((id) => id !== albumId)
         : [...state.savedAlbums, albumId],
+    })),
+  addSongToPlaylist: (playlistId, song) =>
+    set((state) => ({
+      playlists: state.playlists.map((p) =>
+        p.id === playlistId ? { ...p, songs: [...p.songs, song], totalTracks: p.totalTracks + 1 } : p,
+      ),
+    })),
+  removeSongFromPlaylist: (playlistId, songId) =>
+    set((state) => ({
+      playlists: state.playlists.map((p) =>
+        p.id === playlistId ? { ...p, songs: p.songs.filter((s) => s.id !== songId), totalTracks: Math.max(0, p.totalTracks - 1) } : p,
+      ),
+    })),
+  reorderPlaylistSongs: (playlistId, from, to) =>
+    set((state) => ({
+      playlists: state.playlists.map((p) => {
+        if (p.id !== playlistId) return p;
+        const songs = [...p.songs];
+        const [moved] = songs.splice(from, 1);
+        if (moved) songs.splice(to, 0, moved);
+        return { ...p, songs };
+      }),
     })),
   reset: () => set(initialState),
 }));

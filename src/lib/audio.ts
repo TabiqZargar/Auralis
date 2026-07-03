@@ -45,6 +45,14 @@ export class AudioEngine {
     return data;
   }
 
+  resume() {
+    this.audioContext?.resume();
+  }
+
+  connectAudioElement(_el: HTMLAudioElement) {
+    // audio element connection is handled by audioPlayerService
+  }
+
   destroy() {
     if (this.audioContext) {
       this.audioContext.close();

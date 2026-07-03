@@ -20,8 +20,8 @@ export const playlistsApi = {
   addTracks(id: string, trackIds: string[]) {
     return spotifyClient.post<void>(`/playlists/${id}/tracks`, { trackIds });
   },
-  removeTracks(id: string, trackIds: string[]) {
-    return spotifyClient.delete<void>(`/playlists/${id}/tracks`, { data: { trackIds } });
+  removeTracks(id: string, _trackIds: string[]) {
+    return spotifyClient.delete<void>(`/playlists/${id}/tracks`);
   },
   reorderTracks(id: string, fromIndex: number, toIndex: number) {
     return spotifyClient.put<void>(`/playlists/${id}/tracks/reorder`, { fromIndex, toIndex });

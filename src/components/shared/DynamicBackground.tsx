@@ -2,7 +2,7 @@ import { usePlayerStore } from "@/store";
 import { useMemo } from "react";
 
 export function DynamicBackground() {
-  const coverUrl = usePlayerStore((s) => s.currentTrack?.coverUrl);
+  const coverUrl = usePlayerStore((s) => s.currentSong?.coverUrl);
 
   const styles = useMemo(() => {
     if (!coverUrl) {

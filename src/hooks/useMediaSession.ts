@@ -39,18 +39,18 @@ export function useMediaSession(handlers: MediaSessionHandlers) {
 
   useEffect(() => {
     const unsub = usePlayerStore.subscribe((state, prev) => {
-      if (state.currentTrack === prev.currentTrack && state.isPlaying === prev.isPlaying) {
+      if (state.currentSong === prev.currentSong && state.status === prev.status) {
         return;
       }
-      updateMediaSession(state.currentTrack, state.isPlaying);
+      updateMediaSession(state.currentSong, state.status === "playing");
     });
     return () => unsub();
   }, []);
 
   useEffect(() => {
     updateMediaSession(
-      usePlayerStore.getState().currentTrack,
-      usePlayerStore.getState().isPlaying,
+      usePlayerStore.getState().currentSong,
+      usePlayerStore.getState().status === "playing",
     );
   }, []);
 }

@@ -56,16 +56,16 @@ interface NowPlayingOverlayProps {
 }
 
 export function NowPlayingOverlay({ isOpen, onClose }: NowPlayingOverlayProps) {
-  const currentTrack = usePlayerStore((s) => s.currentTrack);
-  const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const currentTrack = usePlayerStore((s) => s.currentSong);
+  const isPlaying = usePlayerStore((s) => s.status === "playing");
   const duration = usePlayerStore((s) => s.duration);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const volume = usePlayerStore((s) => s.volume);
   const muted = usePlayerStore((s) => s.muted);
-  const loading = usePlayerStore((s) => s.loading);
-  const error = usePlayerStore((s) => s.error);
-  const shuffle = useQueueStore((s) => s.shuffle);
-  const repeatMode = useQueueStore((s) => s.repeatMode);
+  const loading = usePlayerStore((s) => s.status === "loading");
+  const error = usePlayerStore((s) => s.status === "error" ? "Playback error" : null);
+  const shuffle = usePlayerStore((s) => s.shuffle === "on");
+  const repeatMode = usePlayerStore((s) => s.repeat);
   const showLyrics = useSettingsStore((s) => s.showLyrics);
   const toggleLyrics = useSettingsStore((s) => s.toggleLyrics);
   const toggleVisualizer = useSettingsStore((s) => s.toggleVisualizer);
@@ -79,19 +79,17 @@ export function NowPlayingOverlay({ isOpen, onClose }: NowPlayingOverlayProps) {
 
   const handlePlayPause = useCallback(() => {
     const p = usePlayerStore.getState();
-    if (!p.currentTrack) return;
-    p.toggle();
+    if (!p.currentSong) return;
+    p.setStatus(p.status === "playing" ? "paused" : "playing");
   }, []);
 
   const handleNext = useCallback(() => {
     const q = useQueueStore.getState();
     const p = usePlayerStore.getState();
-    if (q.queue[q.currentIndex]) {
-      q.pushHistory(q.queue[q.currentIndex]!);
-    }
-    const nextIdx = q.playNext();
-    if (nextIdx !== null && q.queue[nextIdx]) {
-      p.loadTrack(q.queue[nextIdx]!.song);
+    q.next();
+    const nextItem = q.items[q.currentIndex];
+    if (nextItem) {
+      p.setCurrentSong(nextItem.song);
       audioEngine.resume();
     }
   }, []);
@@ -100,19 +98,20 @@ export function NowPlayingOverlay({ isOpen, onClose }: NowPlayingOverlayProps) {
     const p = usePlayerStore.getState();
     const q = useQueueStore.getState();
     if (p.currentTime > 3) {
-      p.seek(0);
+      p.setCurrentTime(0);
       return;
     }
-    const prevIdx = q.playPrevious();
-    if (prevIdx !== null && q.queue[prevIdx]) {
-      p.loadTrack(q.queue[prevIdx]!.song);
+    q.previous();
+    const prevItem = q.items[q.currentIndex];
+    if (prevItem) {
+      p.setCurrentSong(prevItem.song);
       audioEngine.resume();
     }
   }, []);
 
   const handleSeek = useCallback(
     (time: number) => {
-      usePlayerStore.getState().seek(time);
+      usePlayerStore.getState().setCurrentTime(time);
     },
     [],
   );
@@ -128,7 +127,7 @@ export function NowPlayingOverlay({ isOpen, onClose }: NowPlayingOverlayProps) {
     usePlayerStore.getState().toggleMute();
   }, []);
 
-  const queue = useQueueStore((s) => s.queue);
+  const queue = useQueueStore((s) => s.items);
   const queueCurrentIndex = useQueueStore((s) => s.currentIndex);
 
   return (
@@ -233,8 +232,12 @@ export function NowPlayingOverlay({ isOpen, onClose }: NowPlayingOverlayProps) {
                   onTogglePlay={handlePlayPause}
                   onPrevious={handlePrev}
                   onNext={handleNext}
-                  onToggleShuffle={() => useQueueStore.getState().toggleShuffle()}
-                  onCycleRepeat={() => useQueueStore.getState().cycleRepeatMode()}
+                  onToggleShuffle={() => usePlayerStore.getState().setShuffle(usePlayerStore.getState().shuffle === "on" ? "off" : "on")}
+                  onCycleRepeat={() => {
+                    const p = usePlayerStore.getState();
+                    const next = p.repeat === "off" ? "all" : p.repeat === "all" ? "one" : "off";
+                    p.setRepeat(next);
+                  }}
                   size="lg"
                   disabled={!currentTrack || !!error}
                 />

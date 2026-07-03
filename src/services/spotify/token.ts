@@ -27,12 +27,14 @@ export async function getSpotifyToken(): Promise<string> {
     return pendingFetch;
   }
 
-  const { clientId, clientSecret, accountsBaseUrl, tokenEndpoint } = config.spotify;
+  const { clientId } = config.spotify;
+  const accountsBaseUrl = "https://accounts.spotify.com";
+  const tokenEndpoint = "/api/token";
 
-  if (!clientId || !clientSecret) {
+  if (!clientId) {
     throw new Error(
-      "Spotify Client ID and Client Secret must be set in environment variables. " +
-      "Create a .env file with VITE_SPOTIFY_CLIENT_ID and VITE_SPOTIFY_CLIENT_SECRET.",
+      "Spotify Client ID must be set in environment variables. " +
+      "Create a .env file with VITE_SPOTIFY_CLIENT_ID.",
     );
   }
 
@@ -41,7 +43,7 @@ export async function getSpotifyToken(): Promise<string> {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+        Authorization: `Basic ${btoa(`${clientId}:${import.meta.env.VITE_SPOTIFY_CLIENT_SECRET ?? ""}`)}`,
       },
       body: new URLSearchParams({ grant_type: "client_credentials" }),
     });

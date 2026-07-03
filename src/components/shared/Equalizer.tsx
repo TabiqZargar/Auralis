@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { audioEngine } from "@/lib/audio";
-import { getCSSVariableColor, hexToRgba } from "@/utils/color";
+import { hexToRgba } from "@/utils/color";
 
 interface EqualizerProps {
   barCount?: number;
@@ -24,7 +24,7 @@ export function Equalizer({ barCount = 10, className = "" }: EqualizerProps) {
 
     const render = () => {
       ctx.clearRect(0, 0, w, h);
-      const accent = getCSSVariableColor("--dynamic-accent", "#1db954");
+      const accent = getComputedStyle(canvas).getPropertyValue("--dynamic-accent").trim() || "#1db954";
       const freq = audioEngine.getFrequencyData();
       const len = Math.min(freq.length, barCount);
       const step = Math.floor(freq.length / barCount);

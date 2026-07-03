@@ -74,7 +74,7 @@ export function LyricsPanel({ lyrics, className = "" }: LyricsPanelProps) {
             }`}
             onClick={() => {
               setIsUserScrolling(false);
-              usePlayerStore.getState().seek(line.time);
+              usePlayerStore.getState().setCurrentTime(line.time);
             }}
             style={{
               fontSize: i === currentLineIndex ? "1.25rem" : "1rem",

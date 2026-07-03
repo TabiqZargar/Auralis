@@ -11,7 +11,7 @@ interface QueuePanelProps {
 }
 
 export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
-  const queue = useQueueStore((s) => s.queue);
+  const queue = useQueueStore((s) => s.items);
   const currentIndex = useQueueStore((s) => s.currentIndex);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -72,7 +72,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
                     showCover={false}
                     selected={i === currentIndex}
                     onPlay={() => {
-                      usePlayerStore.getState().loadTrack(item.song);
+                      usePlayerStore.getState().setCurrentSong(item.song);
                     }}
                   />
                 </div>

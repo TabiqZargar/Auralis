@@ -1,6 +1,5 @@
 export class AudioPlayerService {
   private audioElement: HTMLAudioElement | null = null;
-  private mediaSource: MediaSource | null = null;
 
   initialize() {
     this.audioElement = new Audio();

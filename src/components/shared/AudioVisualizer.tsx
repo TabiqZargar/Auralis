@@ -210,7 +210,7 @@ export function AudioVisualizer({
   }, [mode, barCount, width, height]);
 
   useEffect(() => {
-    audioEngine.resume();
+    audioEngine.getContext()?.resume();
     rafRef.current = requestAnimationFrame(draw);
     return () => {
       if (rafRef.current !== null) {
