@@ -41,6 +41,7 @@ export function TrackRow({
       const existingIdx = q.items.findIndex((item) => item.song.id === track.id);
       if (existingIdx >= 0) {
         useQueueStore.getState().setCurrentIndex(existingIdx);
+        usePlayerStore.getState().setCurrentSong(track);
       } else {
         const playerState = usePlayerStore.getState();
         const qState = useQueueStore.getState();

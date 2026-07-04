@@ -43,6 +43,41 @@ export function RootLayout() {
     hasInitialized.current = true;
 
     audioEngine.initialize();
+    audioPlayerService.initialize();
+
+    const audioEl = audioPlayerService.getElement();
+    if (audioEl) {
+      try {
+        audioEngine.connectAudioElement(audioEl);
+      } catch {
+        /* element may not be ready */
+      }
+    }
+
+    const unsubSongChange = usePlayerStore.subscribe(
+      (s, ps) => {
+        if (s.currentSong !== ps.currentSong && s.currentSong) {
+          audioPlayerService.load(s.currentSong.audioUrl);
+          audioPlayerService.play()?.then(
+            () => {
+              usePlayerStore.getState().setStatus("playing");
+              audioEngine.resume();
+              useLibraryStore.getState().addRecentlyPlayed(s.currentSong!);
+            },
+            () => usePlayerStore.getState().setStatus("error"),
+          );
+        } else if (s.status !== ps.status) {
+          if (s.status === "playing" && s.currentSong) {
+            audioPlayerService.play()?.then(
+              () => audioEngine.resume(),
+              () => usePlayerStore.getState().setStatus("error"),
+            );
+          } else if (s.status === "paused") {
+            audioPlayerService.pause();
+          }
+        }
+      },
+    );
 
     const q = useQueueStore.getState();
     const p = usePlayerStore.getState();
@@ -52,65 +87,48 @@ export function RootLayout() {
       const firstTrack = MOCK_TRACKS[0]!;
       p.setCurrentSong(firstTrack);
     }
+
+    return () => {
+      unsubSongChange();
+      audioPlayerService.destroy();
+      audioEngine.destroy();
+    };
   }, []);
 
   const handlePlayPause = useCallback(() => {
     const p = usePlayerStore.getState();
     if (!p.currentSong) return;
     if (p.status === "playing") {
-      audioPlayerService.pause();
       p.setStatus("paused");
     } else {
-      audioPlayerService.play()?.then(
-        () => {
-          p.setStatus("playing");
-          audioEngine.resume();
-        },
-        () => p.setStatus("error"),
-      );
+      p.setStatus("playing");
     }
   }, []);
 
   const handleNext = useCallback(() => {
-    const q = useQueueStore.getState();
     const p = usePlayerStore.getState();
-    q.next();
-    const nextItem = q.items[q.currentIndex];
+    useQueueStore.getState().next();
+    const fresh = useQueueStore.getState();
+    const nextItem = fresh.items[fresh.currentIndex];
     if (nextItem) {
-      const nextTrack = nextItem.song;
-      p.setCurrentSong(nextTrack);
-      audioPlayerService.load(nextTrack.audioUrl);
-      audioPlayerService.play()?.then(
-        () => {
-          p.setStatus("playing");
-          audioEngine.resume();
-          useLibraryStore.getState().addRecentlyPlayed(nextTrack);
-        },
-        () => p.setStatus("error"),
-      );
+      p.setCurrentSong(nextItem.song);
     } else {
       p.setStatus("paused");
     }
   }, []);
 
   const handlePrevious = useCallback(() => {
-    const q = useQueueStore.getState();
     const p = usePlayerStore.getState();
     if (p.currentTime > 3) {
       audioPlayerService.seek(0);
       p.setCurrentTime(0);
       return;
     }
-    q.previous();
-    const prevItem = q.items[q.currentIndex];
+    useQueueStore.getState().previous();
+    const fresh = useQueueStore.getState();
+    const prevItem = fresh.items[fresh.currentIndex];
     if (prevItem) {
-      const prevTrack = prevItem.song;
-      p.setCurrentSong(prevTrack);
-      audioPlayerService.load(prevTrack.audioUrl);
-      audioPlayerService.play()?.then(
-        () => p.setStatus("playing"),
-        () => p.setStatus("error"),
-      );
+      p.setCurrentSong(prevItem.song);
     }
   }, []);
 

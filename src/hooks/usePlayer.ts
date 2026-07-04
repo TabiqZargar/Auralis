@@ -25,24 +25,29 @@ export function usePlayer() {
   }, [player]);
 
   const nextTrack = useCallback(() => {
-    queue.next();
-    const nextItem = queue.items[queue.currentIndex + 1];
+    const q = useQueueStore.getState();
+    q.next();
+    const fresh = useQueueStore.getState();
+    const nextItem = fresh.items[fresh.currentIndex];
     if (nextItem) {
-      playSong(nextItem.song, queue.currentIndex + 1);
+      playSong(nextItem.song, fresh.currentIndex);
     }
-  }, [queue, playSong]);
+  }, [playSong]);
 
   const previousTrack = useCallback(() => {
-    if (player.currentTime > 3) {
-      player.setCurrentTime(0);
+    const p = usePlayerStore.getState();
+    if (p.currentTime > 3) {
+      p.setCurrentTime(0);
       return;
     }
-    queue.previous();
-    const prevItem = queue.items[queue.currentIndex - 1];
+    const q = useQueueStore.getState();
+    q.previous();
+    const fresh = useQueueStore.getState();
+    const prevItem = fresh.items[fresh.currentIndex];
     if (prevItem) {
-      playSong(prevItem.song, queue.currentIndex - 1);
+      playSong(prevItem.song, fresh.currentIndex);
     }
-  }, [queue, player, playSong]);
+  }, [playSong]);
 
   return {
     playSong,
