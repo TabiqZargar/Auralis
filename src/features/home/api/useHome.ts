@@ -7,6 +7,12 @@ import {
   type SpotifyNewReleases,
   type SpotifyFeaturedPlaylists,
 } from "@/services/spotify/adapters";
+import {
+  checkSpotifyAvailability,
+  getMockNewReleases,
+  getMockFeaturedPlaylists,
+  getMockTrendingArtists,
+} from "@/services/spotify/fallback";
 import type { Album, Playlist, Artist } from "@/types";
 
 const HOME_STALE_TIME = 1000 * 60 * 5;
@@ -22,29 +28,50 @@ const FEATURED_ARTIST_IDS = [
 ];
 
 async function fetchNewReleases(): Promise<Album[]> {
-  const data = await spotifyGet<SpotifyNewReleases>("/browse/new-releases", { limit: 12 });
-  return (data.albums?.items ?? []).map(mapSpotifyAlbum);
+  try {
+    const data = await spotifyGet<SpotifyNewReleases>("/browse/new-releases", { limit: 12 });
+    return (data.albums?.items ?? []).map(mapSpotifyAlbum);
+  } catch (error) {
+    if (!checkSpotifyAvailability(error)) {
+      return getMockNewReleases();
+    }
+    throw error;
+  }
 }
 
 async function fetchFeaturedPlaylists(): Promise<Playlist[]> {
-  const data = await spotifyGet<SpotifyFeaturedPlaylists>("/browse/featured-playlists", {
-    limit: 12,
-  });
-  return (data.playlists?.items ?? []).map(mapSpotifyPlaylist);
+  try {
+    const data = await spotifyGet<SpotifyFeaturedPlaylists>("/browse/featured-playlists", {
+      limit: 12,
+    });
+    return (data.playlists?.items ?? []).map(mapSpotifyPlaylist);
+  } catch (error) {
+    if (!checkSpotifyAvailability(error)) {
+      return getMockFeaturedPlaylists();
+    }
+    throw error;
+  }
 }
 
 async function fetchTrendingArtists(): Promise<Artist[]> {
-  const results = await Promise.allSettled(
-    FEATURED_ARTIST_IDS.map((id) =>
-      spotifyGet<import("@/services/spotify/adapters").SpotifyArtist>(`/artists/${id}`),
-    ),
-  );
-  return results
-    .filter(
-      (r): r is PromiseFulfilledResult<import("@/services/spotify/adapters").SpotifyArtist> =>
-        r.status === "fulfilled",
-    )
-    .map((r) => mapSpotifyArtist(r.value));
+  try {
+    const results = await Promise.allSettled(
+      FEATURED_ARTIST_IDS.map((id) =>
+        spotifyGet<import("@/services/spotify/adapters").SpotifyArtist>(`/artists/${id}`),
+      ),
+    );
+    return results
+      .filter(
+        (r): r is PromiseFulfilledResult<import("@/services/spotify/adapters").SpotifyArtist> =>
+          r.status === "fulfilled",
+      )
+      .map((r) => mapSpotifyArtist(r.value));
+  } catch (error) {
+    if (!checkSpotifyAvailability(error)) {
+      return getMockTrendingArtists();
+    }
+    throw error;
+  }
 }
 
 export function useNewReleases() {
